@@ -23,7 +23,7 @@
   button { cursor: pointer; font-weight: 600; margin-top: .5rem; }
   .row { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); }
   output { display: block; margin-top: 1rem; }
-  [role="status"] { font-size: .9rem; }
+  [role="status"], .hint { font-size: .9rem; }
   /* A custom element brings its own display value, which beats the user agent rule for [hidden],
      so the empty state stays on the page and in the accessibility tree until it is restated here. */
   roxy-horoscope-card[hidden], roxy-natal-chart[hidden] { display: none; }
@@ -44,7 +44,7 @@
       <input id="key" type="password" placeholder="your project anon key" autocomplete="off">
     </label>
   </div>
-  <p role="status" id="hint">The anon key is safe here. It only reaches your functions, and the API key stays a project secret.</p>
+  <p class="hint">The anon key is safe here. It only reaches your functions, and the API key stays a project secret.</p>
 </fieldset>
 
 <fieldset>

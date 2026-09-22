@@ -14,7 +14,7 @@ export function roxyClient() {
 }
 
 /** The API error contract, passed through instead of flattened. */
-export type RoxyError = { error: string; code: string; doc_url?: string };
+type RoxyError = { error: string; code: string; doc_url?: string };
 
 /**
  * Turns an SDK error into a response that keeps the upstream status.

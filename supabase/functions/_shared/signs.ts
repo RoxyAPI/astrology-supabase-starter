@@ -14,7 +14,7 @@ export const SIGNS = [
   'pisces',
 ] as const;
 
-export type Sign = (typeof SIGNS)[number];
+type Sign = (typeof SIGNS)[number];
 
 /**
  * Narrows an unknown body field to a sign the API accepts.

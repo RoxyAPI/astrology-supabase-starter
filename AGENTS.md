@@ -26,8 +26,8 @@ current.
 - `supabase secrets set ROXY_API_KEY=<your key>`
 - `supabase link --project-ref <ref>`, then `supabase db push`, then `supabase functions deploy`
 
-The key is a project secret. It is never in a table, never in the demo page, and never in a variable a browser
-can read.
+The key is a project secret, read by `supabase/functions/_shared/roxy.ts` and nowhere else. If you add a
+function, import that helper rather than reading the environment again.
 
 ## Endpoints this repo calls
 
