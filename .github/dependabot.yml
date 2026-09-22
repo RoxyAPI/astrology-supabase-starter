@@ -1,0 +1,14 @@
+version: 2
+
+# Only one ecosystem here, and that is deliberate rather than an omission.
+#
+# There is no npm manifest to update: the functions import npm packages through Deno with a major
+# pin (`npm:@roxyapi/sdk@1`), which resolves to the current release at deploy time, so a bot has
+# nothing to raise a pull request against. The weekly spec-drift run is what catches an upstream
+# change, and the major pins are what keep a breaking one out.
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5

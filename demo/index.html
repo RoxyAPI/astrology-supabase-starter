@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Astrology on Supabase</title>
+<script src="https://cdn.jsdelivr.net/npm/@roxyapi/ui@latest/dist/cdn/roxy-ui.js" defer></script>
+<style>
+  :root { color-scheme: light dark; --gap: 1.5rem; }
+  body {
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    line-height: 1.55;
+    margin: 0 auto;
+    max-width: 52rem;
+    padding: var(--gap) 1rem 4rem;
+  }
+  h1 { font-size: 1.6rem; margin-bottom: .25rem; }
+  p.lede { margin-top: 0; }
+  fieldset { border: 1px solid; border-radius: .5rem; margin: 0 0 var(--gap); padding: 1rem; }
+  legend { font-weight: 600; padding: 0 .35rem; }
+  label { display: block; font-size: .9rem; margin-bottom: .75rem; }
+  input, select, button { font: inherit; padding: .4rem .5rem; width: 100%; }
+  button { cursor: pointer; font-weight: 600; margin-top: .5rem; }
+  .row { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); }
+  output { display: block; margin-top: 1rem; }
+  [role="status"] { font-size: .9rem; }
+  /* A custom element brings its own display value, which beats the user agent rule for [hidden],
+     so the empty state stays on the page and in the accessibility tree until it is restated here. */
+  roxy-horoscope-card[hidden], roxy-natal-chart[hidden] { display: none; }
+</style>
+</head>
+<body>
+<main>
+<h1>Astrology on Supabase</h1>
+<p class="lede">Two Edge Functions, one Postgres cache, no key in this page. Point it at your project below.</p>
+
+<fieldset>
+  <legend>Project</legend>
+  <div class="row">
+    <label>Functions URL
+      <input id="url" value="http://127.0.0.1:54321/functions/v1" autocomplete="off">
+    </label>
+    <label>Anon key
+      <input id="key" type="password" placeholder="your project anon key" autocomplete="off">
+    </label>
+  </div>
+  <p role="status" id="hint">The anon key is safe here. It only reaches your functions, and the API key stays a project secret.</p>
+</fieldset>
+
+<fieldset>
+  <legend>Daily reading</legend>
+  <label>Sign
+    <select id="sign">
+      <option>aries</option><option>taurus</option><option>gemini</option><option>cancer</option>
+      <option>leo</option><option>virgo</option><option>libra</option><option>scorpio</option>
+      <option>sagittarius</option><option>capricorn</option><option>aquarius</option><option>pisces</option>
+    </select>
+  </label>
+  <button id="go-horoscope" type="button">Read it</button>
+  <p role="status" id="horoscope-status"></p>
+  <output><roxy-horoscope-card id="horoscope-card" hidden></roxy-horoscope-card></output>
+</fieldset>
+
+<fieldset>
+  <legend>Natal chart</legend>
+  <div class="row">
+    <label>Birth city<input id="city" value="New York" autocomplete="off"></label>
+    <label>Birth date<input id="date" type="date" value="1990-01-15"></label>
+    <label>Birth time<input id="time" type="time" step="1" value="14:30:00"></label>
+  </div>
+  <button id="go-chart" type="button">Cast it</button>
+  <p role="status" id="chart-status"></p>
+  <output><roxy-natal-chart id="chart-card" hidden></roxy-natal-chart></output>
+</fieldset>
+
+</main>
+
+<script type="module">
+  const $ = (id) => document.getElementById(id);
+
+  // The functions answer with the API contract on failure: { error, code }. Showing the message is
+  // more useful than a generic retry line, because most failures here are a wrong URL or key.
+  async function callFunction(name, body) {
+    const key = $('key').value.trim();
+    const res = await fetch(`${$('url').value.replace(/\/$/, '')}/${name}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(key ? { Authorization: `Bearer ${key}` } : {}) },
+      body: JSON.stringify(body),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error ?? `Request failed with ${res.status}`);
+    return json;
+  }
+
+  /**
+   * Assigns data only once the element has upgraded.
+   *
+   * The CDN script is deferred, so a fast click can set `.data` on a plain HTMLElement. That creates
+   * an own property which then shadows the accessor the class defines when it upgrades, and the
+   * component renders empty for ever with no error anywhere.
+   */
+  async function render(id, data) {
+    const el = document.getElementById(id);
+    await customElements.whenDefined(el.localName);
+    el.data = data;
+    el.hidden = false;
+  }
+
+  async function run(button, statusId, work) {
+    const status = $(statusId);
+    button.disabled = true;
+    status.textContent = 'Working';
+    try {
+      const note = await work();
+      status.textContent = typeof note === 'string' ? note : '';
+    } catch (error) {
+      status.textContent = error.message;
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  $('go-horoscope').addEventListener('click', (event) =>
+    run(event.currentTarget, 'horoscope-status', async () => {
+      const { reading, cached } = await callFunction('daily-horoscope', { sign: $('sign').value });
+      // The component takes the reading itself, never the envelope around it.
+      await render('horoscope-card', reading);
+      return cached ? 'Served from your database' : 'Fetched once and cached';
+    }));
+
+  $('go-chart').addEventListener('click', (event) =>
+    run(event.currentTarget, 'chart-status', async () => {
+      const { chart } = await callFunction('natal-chart', {
+        city: $('city').value, date: $('date').value, time: $('time').value,
+      });
+      await render('chart-card', chart);
+    }));
+</script>
+</body>
+</html>

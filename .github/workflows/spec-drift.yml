@@ -1,0 +1,21 @@
+name: Spec drift
+
+# Weekly rather than per pull request. It calls the live API, so putting it in CI would let an
+# unrelated outage block a dependency merge. A failure here arrives as an emailed scheduled run.
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - run: deno task test:drift

@@ -1,0 +1,8 @@
+CLAUDE.md
+node_modules/
+.env
+.env.local
+.DS_Store
+supabase/.temp/
+supabase/.branches/
+screenshots/*.tmp.png

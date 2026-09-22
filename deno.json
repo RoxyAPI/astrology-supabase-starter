@@ -1,0 +1,27 @@
+{
+  "tasks": {
+    "fmt": "deno fmt",
+    "lint": "deno fmt --check && deno lint",
+    "check": "deno check supabase/functions/daily-horoscope/index.ts supabase/functions/natal-chart/index.ts",
+    "test": "deno test --allow-read tests/signs.test.ts",
+    "test:drift": "deno test --allow-net --allow-read tests/drift.test.ts",
+    "verify": "deno task lint && deno task check && deno task test"
+  },
+  "fmt": {
+    "lineWidth": 110,
+    "singleQuote": true,
+    "exclude": [
+      "demo/"
+    ]
+  },
+  "lint": {
+    "exclude": [
+      "demo/"
+    ]
+  },
+  "imports": {
+    "@roxyapi/sdk": "npm:@roxyapi/sdk@1",
+    "@supabase/supabase-js": "npm:@supabase/supabase-js@2",
+    "@std/assert": "jsr:@std/assert@1"
+  }
+}

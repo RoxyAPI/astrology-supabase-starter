@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      # Cheapest first, same order as the local task and the pre-push hook. No secrets: every check
+      # here is offline, so a fork PR runs it safely and a deploy outage never turns a PR red.
+      - run: deno task lint
+      - run: deno task check
+      - run: deno task test
