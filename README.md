@@ -18,7 +18,7 @@ calculation verified against NASA JPL Horizons. MIT, so rebrand it and ship it.
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
 | `daily-horoscope` | Reads the cache first. On a miss it calls the API once, stores the row, and every later reader that day is served from your database |
 | `natal-chart`     | Resolves a birth city to coordinates and an IANA timezone, casts the chart, and saves it only for a signed-in caller                 |
-| `daily_reading`   | Shared cache, readable by anyone, writable only by the service role                                                                  |
+| `daily_reading`   | Shared cache, readable by anyone, writable only by a function holding the secret key                                                 |
 | `saved_chart`     | Private, one policy per verb, every row keyed to `auth.uid()`                                                                        |
 | `demo/index.html` | One page, no framework, renders both through the published web components                                                            |
 
@@ -30,8 +30,9 @@ supabase link --project-ref your-project-ref
 supabase db push && supabase functions deploy
 ```
 
-Get a key at [roxyapi.com/pricing](https://roxyapi.com/pricing). To run it locally instead, `supabase start`
-then `supabase functions serve`, and open `demo/index.html`.
+Get a key at [roxyapi.com/pricing](https://roxyapi.com/pricing). To run it locally instead, put
+`ROXY_API_KEY=your_key_here` in `supabase/functions/.env`, run `supabase start` then
+`supabase functions serve`, and open `demo/index.html` with the publishable key that `supabase start` prints.
 
 ## Endpoints it calls
 

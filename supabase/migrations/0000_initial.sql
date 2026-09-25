@@ -14,8 +14,8 @@ create table if not exists public.daily_reading (
 alter table public.daily_reading enable row level security;
 
 -- Readable by anyone, including a signed-out visitor. There is deliberately no insert or update
--- policy: the function writes with the service role, which bypasses policies, so the cache cannot be
--- poisoned from a browser even with the anon key in hand.
+-- policy: the function writes with the secret key, which acts as the service_role database role and
+-- bypasses policies, so the cache cannot be poisoned from a browser even with the publishable key.
 create policy "daily readings are readable by anyone"
   on public.daily_reading for select
   using (true);

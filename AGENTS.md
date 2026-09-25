@@ -58,8 +58,16 @@ for what: `https://roxyapi.com/docs`.
   has the command.
 - Resolve a city, never ask for coordinates, and keep the IANA timezone rather than an offset.
 - Errors pass through as `{ error, code, doc_url }` with the upstream status. Retry 429 and 5xx only.
-- Row level security is on for both tables. The cache is readable by anyone and writable only by the service
-  role; a saved chart is readable and writable only by the person it belongs to.
+- Row level security is on for both tables. The cache is readable by anyone and writable only through the
+  project secret key; a saved chart is readable and writable only by the person it belongs to.
+- One place reads the Supabase keys: `supabase/functions/_shared/supabase.ts`, which reads the publishable and
+  secret keys from `SUPABASE_PUBLISHABLE_KEYS` and `SUPABASE_SECRET_KEYS` by the name `default`. They are not
+  JWTs, so every function sets `verify_jwt = false` in `supabase/config.toml`, calls `requireProjectKey`
+  first, and verifies a session token itself through `userClient`. `docs/functions.md` has the detail.
+- One import map: `supabase/functions/deno.json`. A new function gets `verify_jwt = false` and
+  `import_map = "./functions/deno.json"` in `supabase/config.toml` and no `deno.json` of its own.
+- `deno task verify` runs lint, types for every file from the root, and tests, the same three CI and the
+  pre-push hook run. Run it before you push.
 
 ## Staying current
 

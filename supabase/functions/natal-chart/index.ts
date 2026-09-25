@@ -1,6 +1,6 @@
-import { createClient } from '@supabase/supabase-js';
 import { corsHeaders, preflight } from '../_shared/cors.ts';
 import { errorResponse, roxyClient } from '../_shared/roxy.ts';
+import { requireProjectKey, userClient } from '../_shared/supabase.ts';
 
 /**
  * The private reading. Resolves a city, casts the chart, and stores it only for a signed-in caller.
@@ -10,8 +10,8 @@ import { errorResponse, roxyClient } from '../_shared/roxy.ts';
  * the correct offset for the DATE of the birth rather than for today.
  */
 Deno.serve(async (req) => {
-  const pre = preflight(req);
-  if (pre) return pre;
+  const refused = preflight(req) ?? requireProjectKey(req);
+  if (refused) return refused;
 
   const body = await req.json().catch(() => ({}));
   const { city, date, time, label } = body as Record<string, unknown>;
@@ -53,22 +53,14 @@ Deno.serve(async (req) => {
 
   // Anonymous callers get the chart and nothing is stored. A chart is birth data, so it is kept only
   // when there is someone to key it to and a policy that hides it from everyone else.
-  const authHeader = req.headers.get('Authorization');
-  if (authHeader) {
-    const db = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
-      { global: { headers: { Authorization: authHeader } } },
-    );
-    const { data: auth } = await db.auth.getUser();
-    if (auth?.user) {
-      await db.from('saved_chart').insert({
-        user_id: auth.user.id,
-        label: typeof label === 'string' ? label : place.city,
-        birth: { city: place.city, date, time, timezone: place.timezone },
-        chart,
-      });
-    }
+  const user = await userClient(req);
+  if (user) {
+    await user.db.from('saved_chart').insert({
+      user_id: user.userId,
+      label: typeof label === 'string' ? label : place.city,
+      birth: { city: place.city, date, time, timezone: place.timezone },
+      chart,
+    });
   }
 
   return new Response(JSON.stringify({ place, chart }), {

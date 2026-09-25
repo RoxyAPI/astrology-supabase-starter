@@ -1,9 +1,12 @@
 {
+  "workspace": [
+    "./supabase/functions"
+  ],
   "tasks": {
     "fmt": "deno fmt",
     "lint": "deno fmt --check && deno lint",
-    "check": "cd supabase/functions/daily-horoscope && deno check index.ts && cd ../natal-chart && deno check index.ts",
-    "test": "deno test --allow-read tests/signs.test.ts",
+    "check": "deno check supabase/functions tests",
+    "test": "deno test --allow-read --allow-env --ignore=tests/drift.test.ts tests/",
     "test:drift": "deno test --allow-net --allow-read tests/drift.test.ts",
     "verify": "deno task lint && deno task check && deno task test"
   },
@@ -20,6 +23,7 @@
     ]
   },
   "imports": {
-    "@std/assert": "jsr:@std/assert@1"
+    "@std/assert": "jsr:@std/assert@1",
+    "@std/toml": "jsr:@std/toml@1"
   }
 }

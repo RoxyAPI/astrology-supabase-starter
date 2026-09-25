@@ -384,6 +384,16 @@ deno_version = 2
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
+# Publishable and secret keys are not JWTs, so the platform JWT check is off for both functions and
+# each one checks its caller itself. Both resolve their imports from the one functions/deno.json.
+[functions.daily-horoscope]
+verify_jwt = false
+import_map = "./functions/deno.json"
+
+[functions.natal-chart]
+verify_jwt = false
+import_map = "./functions/deno.json"
+
 [analytics]
 enabled = true
 port = 54327

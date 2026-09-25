@@ -20,8 +20,9 @@ by everyone.
 Primary key is `(sign, reading_date)`, so a second write for the same day is an upsert and never a duplicate.
 
 Row level security is ON with one policy: anyone may `select`. Nothing may `insert` or `update` through the
-anon or authenticated roles. The function writes with the service role, which bypasses policies by design, so
-the cache can never be poisoned from a browser.
+`anon` or `authenticated` database roles. The function writes with the project secret key, which Postgres sees
+as the `service_role` database role and which bypasses policies by design, so the cache can never be poisoned
+from a browser holding the publishable key.
 
 ## `saved_chart`, the private one
 
@@ -38,8 +39,9 @@ A natal chart belongs to the person who asked for it and to nobody else.
 
 Row level security is ON with four policies, one per verb, each `to authenticated` and each
 `(select auth.uid()) = user_id`. A signed-in person reads and writes only their own rows, and an insert or
-update that names another user is refused. No policy applies to the anon role, so an unauthenticated read sees
-nothing at all rather than an error, and an unauthenticated write is refused.
+update that names another user is refused. No policy applies to the `anon` database role, which is what a
+request carrying only the publishable key runs as, so an unauthenticated read sees nothing at all rather than
+an error, and an unauthenticated write is refused.
 
 Three choices keep the policies fast as the table grows, and a new policy should follow all three:
 

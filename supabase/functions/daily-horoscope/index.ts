@@ -1,7 +1,7 @@
-import { createClient } from '@supabase/supabase-js';
 import { corsHeaders, preflight } from '../_shared/cors.ts';
 import { errorResponse, roxyClient } from '../_shared/roxy.ts';
 import { isSign } from '../_shared/signs.ts';
+import { adminClient, requireProjectKey } from '../_shared/supabase.ts';
 
 /**
  * The shared reading. One upstream call per sign per day, whatever the traffic.
@@ -11,8 +11,8 @@ import { isSign } from '../_shared/signs.ts';
  * ships no cron job, which would have meant a key in the database.
  */
 Deno.serve(async (req) => {
-  const pre = preflight(req);
-  if (pre) return pre;
+  const refused = preflight(req) ?? requireProjectKey(req);
+  if (refused) return refused;
 
   const { sign } = await req.json().catch(() => ({ sign: undefined }));
   if (!isSign(sign)) {
@@ -25,12 +25,9 @@ Deno.serve(async (req) => {
     );
   }
 
-  // The service role bypasses row level security, which is what lets this function write a table no
-  // browser may write. It is injected by the platform and is never one of your own secrets.
-  const db = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-  );
+  // The secret key bypasses row level security, which is what lets this function write a table no
+  // browser may write.
+  const db = adminClient();
 
   const { data: cached } = await db
     .from('daily_reading')

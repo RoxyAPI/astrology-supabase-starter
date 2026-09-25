@@ -19,7 +19,7 @@
   fieldset { border: 1px solid; border-radius: .5rem; margin: 0 0 var(--gap); padding: 1rem; }
   legend { font-weight: 600; padding: 0 .35rem; }
   label { display: block; font-size: .9rem; margin-bottom: .75rem; }
-  input, select, button { font: inherit; padding: .4rem .5rem; width: 100%; }
+  input, select, button { box-sizing: border-box; font: inherit; padding: .4rem .5rem; width: 100%; }
   button { cursor: pointer; font-weight: 600; margin-top: .5rem; }
   .row { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); }
   output { display: block; margin-top: 1rem; }
@@ -40,11 +40,11 @@
     <label>Functions URL
       <input id="url" value="http://127.0.0.1:54321/functions/v1" autocomplete="off">
     </label>
-    <label>Anon key
-      <input id="key" type="password" placeholder="your project anon key" autocomplete="off">
+    <label>Publishable key
+      <input id="key" type="password" placeholder="sb_publishable_..." autocomplete="off">
     </label>
   </div>
-  <p class="hint">The anon key is safe here. It only reaches your functions, and the API key stays a project secret.</p>
+  <p class="hint">The publishable key is safe here. It only reaches your functions, and the API key stays a project secret.</p>
 </fieldset>
 
 <fieldset>
@@ -81,10 +81,9 @@
   // The functions answer with the API contract on failure: { error, code }. Showing the message is
   // more useful than a generic retry line, because most failures here are a wrong URL or key.
   async function callFunction(name, body) {
-    const key = $('key').value.trim();
     const res = await fetch(`${$('url').value.replace(/\/$/, '')}/${name}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...(key ? { Authorization: `Bearer ${key}` } : {}) },
+      headers: { 'Content-Type': 'application/json', apikey: $('key').value.trim() },
       body: JSON.stringify(body),
     });
     const json = await res.json();
