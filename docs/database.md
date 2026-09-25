@@ -36,9 +36,18 @@ A natal chart belongs to the person who asked for it and to nobody else.
 | `chart`      | `jsonb`       | the response                               |
 | `created_at` | `timestamptz` |                                            |
 
-Row level security is ON with four policies, one per verb, each `auth.uid() = user_id`. A signed-in person
-reads and writes only their own rows. There is no policy for the anon role, so an unauthenticated request sees
-nothing at all rather than an error.
+Row level security is ON with four policies, one per verb, each `to authenticated` and each
+`(select auth.uid()) = user_id`. A signed-in person reads and writes only their own rows, and an insert or
+update that names another user is refused. No policy applies to the anon role, so an unauthenticated read sees
+nothing at all rather than an error, and an unauthenticated write is refused.
+
+Three choices keep the policies fast as the table grows, and a new policy should follow all three:
+
+- `to authenticated` names the role, so Postgres skips the check for any other role instead of running it.
+- `(select auth.uid())` rather than a bare `auth.uid()`, so the id is read once per statement, not once per
+  row.
+- The index on `(user_id, created_at desc)` leads with the column every policy filters on, so it serves that
+  filter as well as the newest first listing. A second index on `user_id` alone would only duplicate it.
 
 Deleting the account deletes the charts, which is the cascade, not a job.
 

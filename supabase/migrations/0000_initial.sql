@@ -36,21 +36,27 @@ create index if not exists saved_chart_user_id_created_at_idx
 alter table public.saved_chart enable row level security;
 
 -- One policy per verb rather than one permissive policy, so a later change to reads cannot widen
--- writes by accident. No policy names the anon role, so a signed-out request sees an empty result
--- rather than an error it could probe.
+-- writes by accident. Each is scoped to the authenticated role, so a signed-out request skips the
+-- check entirely: a read returns an empty result rather than an error it could probe, and a write is
+-- refused. `(select auth.uid())` runs once per statement rather than once per row, and the index
+-- above leads with `user_id`, so it also serves the filter every policy applies.
 create policy "people read their own charts"
   on public.saved_chart for select
-  using (auth.uid() = user_id);
+  to authenticated
+  using ((select auth.uid()) = user_id);
 
 create policy "people create their own charts"
   on public.saved_chart for insert
-  with check (auth.uid() = user_id);
+  to authenticated
+  with check ((select auth.uid()) = user_id);
 
 create policy "people update their own charts"
   on public.saved_chart for update
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+  to authenticated
+  using ((select auth.uid()) = user_id)
+  with check ((select auth.uid()) = user_id);
 
 create policy "people delete their own charts"
   on public.saved_chart for delete
-  using (auth.uid() = user_id);
+  to authenticated
+  using ((select auth.uid()) = user_id);
