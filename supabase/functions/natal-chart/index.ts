@@ -27,10 +27,10 @@ Deno.serve(async (req) => {
 
   const roxy = roxyClient();
 
-  const { data: found, error: cityError } = await roxy.location.searchCities({
+  const { data: found, error: cityError, response: cityResponse } = await roxy.location.searchCities({
     query: { q: city, limit: 1 },
   });
-  if (cityError) return errorResponse(cityError, corsHeaders);
+  if (cityError) return errorResponse(cityError, cityResponse, corsHeaders);
 
   const place = found?.cities?.[0];
   if (!place) {
@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
     );
   }
 
-  const { data: chart, error } = await roxy.astrology.generateNatalChart({
+  const { data: chart, error, response } = await roxy.astrology.generateNatalChart({
     body: {
       date,
       time,
@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
       timezone: place.timezone,
     },
   });
-  if (error) return errorResponse(error, corsHeaders);
+  if (error) return errorResponse(error, response, corsHeaders);
 
   // Anonymous callers get the chart and nothing is stored. A chart is birth data, so it is kept only
   // when there is someone to key it to and a policy that hides it from everyone else.

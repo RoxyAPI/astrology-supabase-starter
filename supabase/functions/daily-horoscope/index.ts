@@ -43,8 +43,8 @@ Deno.serve(async (req) => {
   }
 
   const roxy = roxyClient();
-  const { data, error } = await roxy.astrology.getDailyHoroscope({ path: { sign } });
-  if (error) return errorResponse(error, corsHeaders);
+  const { data, error, response } = await roxy.astrology.getDailyHoroscope({ path: { sign } });
+  if (error) return errorResponse(error, response, corsHeaders);
 
   await db.from('daily_reading').upsert(
     { sign, payload: data, fetched_at: new Date().toISOString() },
